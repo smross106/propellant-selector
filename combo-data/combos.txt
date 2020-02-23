@@ -1,0 +1,3 @@
+Oxidiser	Fuel	ISP	T(chamber)	T(exhaust)
+nitrous	ethane	183.3	3174	2532
+nitrous	ammonia	183.7	2861	2084

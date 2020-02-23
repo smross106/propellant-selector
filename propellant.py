@@ -15,3 +15,11 @@ class Propellant(object):
     def pressure(self,temperature):
         if type(self.F_pressure)==poly1d:
             return(self.F_pressure(temperature))
+    
+    def liquid_density(self, temperature):
+        if type(self.F_pressure)==poly1d:
+            return(self.F_density_liquid(temperature))
+    
+    def vapor_density(self, temperature):
+        if type(self.F_pressure)==poly1d:
+            return(self.F_density_vapour(temperature))

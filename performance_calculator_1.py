@@ -1,52 +1,11 @@
-from propellant import Propellant
-from nist_reader import process_data
+from propellant import Propellant, Propellant_Mix
+from nist_reader import propellant_data
 from numpy import pi
 
 class Material(object):
     def __init__(self,yield_strength,density):
         self.yield_strength = yield_strength
         self.density = density
-
-
-class Propellant_Mix(object):
-    def __init__(self,fuel,oxidiser,temperature,pressure,OF_ratio):
-        if not (fuel in fuels_phases.keys()):
-            return ValueError
-        else:
-            self.fuel = Propellant(fuels_phases[fuel][0])
-        
-        if not oxidiser in oxidisers_phases.keys():
-            return ValueError
-        else:
-            self.oxidiser = Propellant(oxidisers_phases[oxidiser][0])
-
-        process_data(self.fuel,fuel)
-        process_data(self.oxidiser,oxidiser)
-
-        self.temperature = temperature
-        self.pressure = pressure
-
-        self.OF_molar_ratio = OF_ratio
-        self.OF_mass_ratio = self.OF_molar_ratio * oxidisers_phases[oxidiser][1] / fuels_phases[fuel][1]
-
-        
-        if self.fuel.pressure(self.temperature) > self.pressure:
-            print("Fuel will self-pressurise to greater than pressure")
-            input("Input any value to increase pressure to fuel vapour pressure  ")
-            if input!="":
-                self.pressure = self.fuel.pressure(self.temperature)
-
-        if self.oxidiser.pressure(self.temperature) > self.pressure:
-            print("Oxidiser will self-pressurise to greater than pressure")
-            input("Input any value to increase pressure to oxidiser vapour pressure  ")
-            if input!="":
-                self.pressure = self.oxidiser.pressure(self.temperature)
-        
-        if self.pressure!=pressure:
-            print("New pressure is "+str(round(self.pressure,2))+" bar")
-    
-    
-
 
 class Vehicle(object):
     def __init__(self,propellant_mix,material,diameter):
@@ -89,15 +48,14 @@ class Vehicle(object):
 
         representative_mass_fraction = (1+self.propellant_mix.OF_mass_ratio) / representative_mass
 
+        self.rep_mass = representative_mass
+
         print(representative_length,representative_mass,representative_mass_fraction)
+    
+    def calculate_representative_engine_data(self):
+        pass
 
     
-
-
-oxidisers_phases = {"nitrous":[2,44]}
-fuels_phases = {"ammonia":[2,17],"ethane":[2,30]}
-
-
 aluminium = Material(170*(10**6),2700)
         
 

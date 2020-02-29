@@ -70,11 +70,15 @@ def propellant_data(propellant,filename):
     split_data = get_prop_data(filename)
 
     #values for position of each data type are hard coded and manually read from file
-    propellant.F_pressure = get_fit(split_data,1,POLY_DEG)
-    propellant.F_density_liquid = get_fit(split_data,2,POLY_DEG)
+    if propellant.twophase == 2:
+        propellant.F_pressure = get_fit(split_data,1,POLY_DEG)
+        propellant.F_density_liquid = get_fit(split_data,2,POLY_DEG)
 
-    propellant.F_density_vapour = get_fit(split_data,14,POLY_DEG)
-
+        propellant.F_density_vapour = get_fit(split_data,14,POLY_DEG)
+    elif propellant.twophase == 0:
+        propellant.F_pressure = get_fit(split_data,1,POLY_DEG)
+        propellant.F_density_liquid = get_fit(split_data,2,POLY_DEG)
+    
 def combo_data(propellant_mix, filename):
     split_data = get_combo_data(filename)
 
@@ -83,6 +87,7 @@ def combo_data(propellant_mix, filename):
         if row[0]==propellant_mix.oxidiser_name and row[1]==propellant_mix.fuel_name:
             data = row
             break
-    propellant_mix.ISP_sea_level = row[2]
-    propellant_mix.chamber_temp = row[3]
-    propellant_mix.exhaust_temp = row[4]
+    propellant_mix.ISP_sea_level = float(row[3])
+    propellant_mix.OF_molar_ratio = float(row[2])
+    propellant_mix.chamber_temp = float(row[4])
+    propellant_mix.exhaust_temp = float(row[5])

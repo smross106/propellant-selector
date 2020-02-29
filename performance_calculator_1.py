@@ -3,7 +3,8 @@ from nist_reader import propellant_data
 from numpy import pi
 
 class Material(object):
-    def __init__(self,yield_strength,density):
+    def __init__(self,name,yield_strength,density):
+        self.name = name
         self.yield_strength = yield_strength
         self.density = density
 
@@ -24,7 +25,6 @@ class Vehicle(object):
 
         thickness = pressure * self.radius / self.material.yield_strength
 
-        print(thickness,thickness*1000)
         self.wall_thickness = thickness
     
     def calculate_representative_pressurant_data(self):
@@ -60,18 +60,21 @@ class Vehicle(object):
 
         pressurant_system_mass = (pressurant_tank_mass * pressurant_plumbing_mass_factor) + representative_pressurant_mass
 
+        self.rep_pressurant_mass = representative_pressurant_mass
+        self.rep_pressurant_system_mass = pressurant_system_mass
 
-        print(representative_pressurant_mass,pressurant_system_mass)
 
     
     def calculate_representative_scales(self):
         """
         Representative Length is the total length of tank required for 1kg of fuel and equivalent oxidiser
         Representative Mass is the mass of tankage (not tanks and propellant) needed to hold the above quantities of propellant
+        Representative Prop System Mass is Representative Mass plus mass of propllant needed to fill that
         Representative Mass Fraction is the mass fraction of a tank with Representative Length
 
         Note that this does not include bulkheads etc - potential future feature?
         """
+        bulkhead_mass_factor = 1.25
 
         effective_fuel_density = (self.ullage * self.propellant_mix.fuel.vapor_density(self.temperature)) + ((1-self.ullage) * self.propellant_mix.fuel.liquid_density(self.temperature))
         effective_oxidiser_density = (self.ullage * self.propellant_mix.oxidiser.vapor_density(self.temperature)) + ((1-self.ullage) * self.propellant_mix.oxidiser.liquid_density(self.temperature))
@@ -85,25 +88,72 @@ class Vehicle(object):
 
         representative_length = fuel_length + oxidisier_length
 
-        representative_mass = 2 * pi * self.radius * self.wall_thickness * representative_length * self.material.density
+        representative_mass = 2 * pi * self.radius * self.wall_thickness * representative_length * self.material.density * bulkhead_mass_factor
+
+        representative_system_mass = (1+self.propellant_mix.OF_mass_ratio) + representative_mass
 
         representative_mass_fraction = (1+self.propellant_mix.OF_mass_ratio) / representative_mass
 
+        self.rep_length = representative_length
         self.rep_mass = representative_mass
+        self.rep_system_mass = representative_system_mass
 
-        print(representative_length,representative_mass,representative_mass_fraction)
     
     def calculate_representative_engine_data(self):
-        print(self.propellant_mix.ISP_sea_level)
+        """
+        Representative thrust - assume a max flow rate of 0.1kg/s for oxidiser
+        Representative TWR - representative Thrust divided by (mass of )
+        """
+        oxidiser_mass_flow = 1
+        burn_time =  self.propellant_mix.OF_mass_ratio 
+        fuel_mass_flow = 1 / burn_time
+
+        mass_flow = oxidiser_mass_flow + fuel_mass_flow
+
+        representative_thrust = self.propellant_mix.ISP_sea_level * 9.81 * mass_flow
+
+        representative_mass = self.rep_system_mass + self.rep_pressurant_system_mass
+
+        representative_TWR = representative_thrust / representative_mass
+
+        representative_impulse = representative_thrust * burn_time
+
+        self.rep_thrust = representative_thrust
+        self.rep_TWR = representative_TWR
+        self.rep_impulse = representative_impulse
 
     
-aluminium = Material(170*(10**6),2700)
+    def __repr__(self):
+        return("Fuel: " + self.propellant_mix.fuel_name + "\n" +
+        "Oxidiser: " + self.propellant_mix.oxidiser_name + "\n" +
+        "Propellant temperature: " + str(self.temperature) + "K \n" +
+        "Tank pressure: " + str(self.propellant_mix.pressure) + "bar \n" +
+        "Tank diameter: " + str(self.radius*2) + "m \n" +
+        "Tank material: " + self.material.name + "\n" + 
+        "Pressurant: " + self.pressurant.name + "\n" +
+        "*** Representative Performance of a System with 1kg of fuel *** \n   Masses of tank walls, propellants and pressurising system considered" + "\n" +
+        "Length of tank required: {:.2f}".format(self.rep_length) + "m \n" +
+        "Tank wall thickness:  {:.2f}".format(self.wall_thickness*1000) + "mm \n" +
+        "Mass of tank (including bulkhead estimate):  {:.2f}".format(self.rep_mass) + "kg \n" +
+        "Total propellant system mass:  {:.2f}".format(self.rep_system_mass) + "kg \n \n" +
+        "Pressurant mass required:  {:.2f}".format(self.rep_pressurant_mass) + "kg \n" +
+        "Pressurant system mass estimate:  {:.2f}".format(self.rep_pressurant_system_mass) + "kg \n \n" +
+        "*** Representative Thrust and TWR assumes a constant fuel flow rate of 0.1kg/s, and does not factor in engine or airframe mass \n" +
+        "Representative burn time :  {:.2f}".format(self.propellant_mix.OF_mass_ratio) + "s \n" +
+        "Representative thrust:  {:.2f}".format(self.rep_thrust) + "N \n" +
+        "Representative system TWR:  {:.2f}".format(self.rep_TWR) + "\n" +
+        "Representative system impulse:  {:.2f}".format(self.rep_impulse) + "Ns \n")
+
+    
+aluminium = Material("aluminium",170*(10**6),2700)
 pressurants = [Pressurant("helium",0.004,1.66),Pressurant("nitrogen",0.028,1.40),Pressurant("carbon-dioxide",44,1.29)]
 
-ethane_nitrous = Propellant_Mix("ethanol","nitrous",250,17)
-test_tank = Vehicle(ethane_nitrous,aluminium,pressurants[1],0.1524)
+ethane_nitrous = Propellant_Mix("ammonia","nitrous",250,17)
+test_tank = Vehicle(ethane_nitrous,aluminium,pressurants[0],0.1524)
 test_tank.calculate_minimum_tank_thickness()
-test_tank.wall_thickness = 0.00325
+test_tank.wall_thickness = 0.004
 test_tank.calculate_representative_scales()
-
 test_tank.calculate_representative_pressurant_data()
+test_tank.calculate_representative_engine_data()
+
+print(test_tank)

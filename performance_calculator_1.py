@@ -124,14 +124,15 @@ class Vehicle(object):
 
     
     def __repr__(self):
-        return("Fuel: " + self.propellant_mix.fuel_name + "\n" +
+        return("***Initial Vehicle Parameters: \n"
+        "Fuel: " + self.propellant_mix.fuel_name + "\n" +
         "Oxidiser: " + self.propellant_mix.oxidiser_name + "\n" +
         "Propellant temperature: " + str(self.temperature) + "K \n" +
         "Tank pressure: " + str(self.propellant_mix.pressure) + "bar \n" +
         "Tank diameter: " + str(self.radius*2) + "m \n" +
         "Tank material: " + self.material.name + "\n" + 
-        "Pressurant: " + self.pressurant.name + "\n" +
-        "*** Representative Performance of a System with 1kg of fuel *** \n   Masses of tank walls, propellants and pressurising system considered" + "\n" +
+        "Pressurant: " + self.pressurant.name + "\n \n" +
+        "*** Representative Performance of a System with 1kg of fuel *** \n    Masses of tank walls, propellants and pressurising system considered" + "\n" +
         "Length of tank required: {:.2f}".format(self.rep_length) + "m \n" +
         "Tank wall thickness:  {:.2f}".format(self.wall_thickness*1000) + "mm \n" +
         "Mass of tank (including bulkhead estimate):  {:.2f}".format(self.rep_mass) + "kg \n" +
@@ -146,10 +147,10 @@ class Vehicle(object):
 
     
 aluminium = Material("aluminium",170*(10**6),2700)
-pressurants = [Pressurant("helium",0.004,1.66),Pressurant("nitrogen",0.028,1.40),Pressurant("carbon-dioxide",44,1.29)]
+pressurants = [Pressurant("helium",0.004,1.66),Pressurant("nitrogen",0.028,1.40),Pressurant("carbon-dioxide",0.044,1.29)]
 
 ethane_nitrous = Propellant_Mix("ammonia","nitrous",250,17)
-test_tank = Vehicle(ethane_nitrous,aluminium,pressurants[0],0.1524)
+test_tank = Vehicle(ethane_nitrous,aluminium,pressurants[2],0.1524)
 test_tank.calculate_minimum_tank_thickness()
 test_tank.wall_thickness = 0.004
 test_tank.calculate_representative_scales()

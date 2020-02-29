@@ -6,7 +6,7 @@ from numpy import poly1d
 from nist_reader import propellant_data, combo_data
 
 oxidisers_phases = {"nitrous":[2,44]}
-fuels_phases = {"ammonia":[2,17],"ethane":[2,30]}
+fuels_phases = {"ammonia":[2,17],"ethane":[2,30],"ethanol":[0,46],"diesel":[0,166]}
 
 class Propellant(object):
     def __init__(self,phase):
@@ -20,18 +20,27 @@ class Propellant(object):
     def pressure(self,temperature):
         if type(self.F_pressure)==poly1d:
             return(self.F_pressure(temperature))
+        else:
+            if self.twophase==0:
+                return(0)
     
     def liquid_density(self, temperature):
         if type(self.F_pressure)==poly1d:
             return(self.F_density_liquid(temperature))
+        else:
+            if self.twophase==1:
+                return(0)
     
     def vapor_density(self, temperature):
-        if type(self.F_pressure)==poly1d:
+        if type(self.F_pressure)==poly1d and self.twophase!=0:
             return(self.F_density_vapour(temperature))
+        else:
+            if self.twophase==0:
+                return(0)
 
 
 class Propellant_Mix(object):
-    def __init__(self,fuel,oxidiser,temperature,pressure,OF_ratio):
+    def __init__(self,fuel,oxidiser,temperature,pressure):
         if not (fuel in fuels_phases.keys()):
             return ValueError
         else:
@@ -52,7 +61,6 @@ class Propellant_Mix(object):
         self.temperature = temperature
         self.pressure = pressure
 
-        self.OF_molar_ratio = OF_ratio
         self.OF_mass_ratio = self.OF_molar_ratio * oxidisers_phases[oxidiser][1] / fuels_phases[fuel][1]
 
         
@@ -70,3 +78,10 @@ class Propellant_Mix(object):
         
         if self.pressure!=pressure:
             print("New pressure is "+str(round(self.pressure,2))+" bar")
+
+
+class Pressurant(object):
+    def __init__(self,name,molar_mass,R):
+        self.name = name
+        self.molar_mass = molar_mass
+        self.R = R
